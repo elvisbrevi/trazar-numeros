@@ -22,7 +22,7 @@ function recorrer(t: Trazado, ruido = 0.05): void {
 }
 
 describe('Trazado', () => {
-  it.each([10, 11, 12, 13, 14, 15, 16])('se completa siguiendo los trazos de %i', (n) => {
+  it.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])('se completa siguiendo los trazos de %i', (n) => {
     const t = new Trazado(trazosDe(n), medidas)
     recorrer(t)
     expect(t.terminado).toBe(true)
@@ -53,7 +53,7 @@ describe('Trazado', () => {
   })
 
   it('los trazos quedan remuestreados a paso fijo', () => {
-    for (const trazo of trazosDe(16)) {
+    for (const trazo of [1, 2, 3, 4, 5, 6, 7, 8, 9].flatMap(trazosDe)) {
       for (let i = 1; i < trazo.length - 1; i++) {
         const d = Math.hypot(trazo[i].x - trazo[i - 1].x, trazo[i].y - trazo[i - 1].y)
         expect(d).toBeLessThan(PASO * 1.01)

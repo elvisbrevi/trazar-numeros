@@ -112,6 +112,26 @@ const DIGITOS: Record<string, Digito> = {
       ),
     ],
   },
+  '7': {
+    ancho: 1,
+    trazos: [unir(linea(p(0.08, 1.6), p(0.92, 1.6)), linea(p(0.92, 1.6), p(0.35, 0)))],
+  },
+  // El 8 de un solo trazo: baja por la izquierda del óvalo de arriba, da toda
+  // la vuelta al de abajo por la derecha y sube por la derecha del de arriba.
+  '8': {
+    ancho: 1,
+    trazos: [
+      unir(
+        arco(0.5, 1.21, 0.32, 0.37, 90, 270),
+        arco(0.5, 0.42, 0.4, 0.42, 90, -270),
+        arco(0.5, 1.21, 0.32, 0.37, -90, 90),
+      ),
+    ],
+  },
+  '9': {
+    ancho: 1,
+    trazos: [unir(arco(0.48, 1.14, 0.4, 0.44, 0, 360), linea(p(0.88, 1.14), p(0.88, 0)))],
+  },
 }
 
 /** Dígitos de un número con sus trazos ya remuestreados. */

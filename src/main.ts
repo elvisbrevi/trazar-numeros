@@ -11,7 +11,7 @@ import { desbloquearAudio, sonidoAvance, sonidoElegir, sonidoFanfarria, sonidoFu
 import { Trazado, type Resultado } from './trazo'
 import { PALABRAS, decir, hayVoz } from './voz'
 
-const NUMEROS = [10, 11, 12, 13, 14, 15, 16]
+const NUMEROS = Array.from({ length: 16 }, (_, i) => i + 1)
 const COLORES = ['#ff5d8f', '#ffb000', '#3ec1ff', '#8b5cf6', '#2ecc71', '#ff7a3d', '#e64fd1']
 const CONFETI = ['#ff5d8f', '#ffd23f', '#3ec1ff', '#8b5cf6', '#2ecc71', '#ff7a3d', '#ffffff']
 const FRASES = ['¡Muy bien!', '¡Genial!', '¡Excelente!', '¡Bravo!', '¡Súper!', '¡Lo hiciste!']
@@ -287,7 +287,14 @@ lienzo.addEventListener('pointercancel', soltar)
 
 // --- Interfaz -------------------------------------------------------------------
 
+const burbujas = $('.burbujas')
 for (const n of NUMEROS) {
+  const s = document.createElement('span')
+  s.textContent = String(n)
+  s.style.setProperty('--c', COLORES[(n - NUMEROS[0]) % COLORES.length])
+  s.style.setProperty('--d', `${(n - NUMEROS[0]) * 0.1}s`)
+  burbujas.append(s)
+
   const b = document.createElement('button')
   b.type = 'button'
   b.dataset.n = String(n)

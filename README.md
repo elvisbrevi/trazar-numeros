@@ -1,7 +1,7 @@
 # ¡Escribe los números!
 
 Juego para celulares en el que los niños aprenden a escribir los números del
-10 al 16 trazándolos con el dedo, al estilo de Duolingo ABC.
+1 al 16 trazándolos con el dedo, al estilo de Duolingo ABC.
 
 - Arriba se elige el número; aparece difuminado con una guía punteada y un
   círculo verde que marca dónde empezar y hacia dónde ir.

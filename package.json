@@ -2,7 +2,7 @@
   "name": "trazar-numeros",
   "private": true,
   "version": "0.1.0",
-  "description": "Juego para que los niños aprendan a escribir los números del 10 al 16 trazándolos con el dedo",
+  "description": "Juego para que los niños aprendan a escribir los números del 1 al 16 trazándolos con el dedo",
   "type": "module",
   "scripts": {
     "dev": "vite --host",

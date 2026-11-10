@@ -1,7 +1,7 @@
 {
   "name": "¡Escribe los números!",
   "short_name": "Números",
-  "description": "Aprende a escribir los números del 10 al 16 trazándolos con el dedo.",
+  "description": "Aprende a escribir los números del 1 al 16 trazándolos con el dedo.",
   "lang": "es",
   "start_url": "./",
   "display": "fullscreen",

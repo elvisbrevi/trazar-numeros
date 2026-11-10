@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#6cc8ff" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Números" />
+    <meta name="description" content="Aprende a escribir los números del 10 al 16 trazándolos con el dedo." />
+    <link rel="icon" href="./icono.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icono-180.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <title>¡Escribe los números!</title>
+  </head>
+  <body>
+    <canvas id="lienzo" aria-label="Zona para trazar el número con el dedo"></canvas>
+
+    <nav id="barra" aria-label="Elige un número"></nav>
+
+    <div id="abajo">
+      <button id="parlante" type="button" aria-label="Escuchar el número">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M8 18h8l10-8v28l-10-8H8z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round" />
+          <path class="onda" d="M32 17c3 3 3 11 0 14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+          <path class="onda onda2" d="M37 12c6 6 6 18 0 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+        </svg>
+      </button>
+      <div id="palabra" aria-live="polite">diez</div>
+      <button id="otra-vez" type="button" aria-label="Empezar de nuevo este número">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M36 16a14 14 0 1 0 3 12" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" />
+          <path d="M38 6v12H26z" fill="#fff" stroke="#fff" stroke-width="2" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </div>
+
+    <div id="bravo" aria-live="assertive"></div>
+
+    <section id="inicio">
+      <div class="burbujas" aria-hidden="true">
+        <span style="--c: #ff5d8f; --d: 0s">10</span><span style="--c: #ffb000; --d: 0.15s">11</span
+        ><span style="--c: #3ec1ff; --d: 0.3s">12</span><span style="--c: #8b5cf6; --d: 0.45s">13</span
+        ><span style="--c: #2ecc71; --d: 0.6s">14</span><span style="--c: #ff7a3d; --d: 0.75s">15</span
+        ><span style="--c: #e64fd1; --d: 0.9s">16</span>
+      </div>
+      <h1>¡Escribe<br />los números!</h1>
+      <p>Sigue el camino con tu dedito ✏️</p>
+      <button id="jugar" type="button">¡A jugar!</button>
+    </section>
+
+    <section id="final">
+      <div class="trofeo" aria-hidden="true">🏆</div>
+      <h2>¡Lo lograste!</h2>
+      <p>Escribiste todos los números del 10 al 16</p>
+      <button id="de-nuevo" type="button">Jugar otra vez</button>
+    </section>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

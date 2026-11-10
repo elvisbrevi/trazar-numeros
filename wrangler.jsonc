@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "trazar-numeros",
+  "compatibility_date": "2026-11-01",
+  // Worker de sólo assets estáticos: todo el juego corre en el navegador.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

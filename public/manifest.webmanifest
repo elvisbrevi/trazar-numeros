@@ -1,0 +1,16 @@
+{
+  "name": "¡Escribe los números!",
+  "short_name": "Números",
+  "description": "Aprende a escribir los números del 10 al 16 trazándolos con el dedo.",
+  "lang": "es",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#6cc8ff",
+  "theme_color": "#6cc8ff",
+  "icons": [
+    { "src": "icono.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icono-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icono-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

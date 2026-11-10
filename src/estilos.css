@@ -1,0 +1,367 @@
+:root {
+  --verde: #58cc02;
+  --verde-osc: #46a302;
+  --azul: #1cb0f6;
+  --azul-osc: #1899d6;
+  --naranja: #ff9600;
+  --naranja-osc: #e08600;
+  --tinta: #4b3f72;
+  font-family: 'Fredoka', 'Baloo 2', 'Comic Sans MS', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #6cc8ff;
+  color: var(--tinta);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+}
+
+button {
+  font: inherit;
+  border: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#lienzo {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  display: block;
+}
+
+/* --- Barra de números --- */
+
+#barra {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: clamp(4px, 1.6vw, 10px);
+  padding: calc(env(safe-area-inset-top) + 10px) 8px 12px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 0 0 24px 24px;
+}
+
+#barra button {
+  position: relative;
+  flex: 1 1 0;
+  max-width: 64px;
+  min-width: 0;
+  height: clamp(44px, 12vw, 58px);
+  border-radius: 16px;
+  background: var(--color);
+  color: #fff;
+  font-weight: 700;
+  font-size: clamp(18px, 5.6vw, 26px);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 5px 0 color-mix(in srgb, var(--color) 70%, #000),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.08),
+    inset 0 3px 0 rgba(255, 255, 255, 0.35);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+#barra button:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color) 70%, #000);
+}
+
+#barra button.activo {
+  transform: translateY(-3px) scale(1.1);
+  outline: 4px solid #fff;
+  z-index: 1;
+  animation: latido 1.4s ease-in-out infinite;
+}
+
+#barra button.hecho::after {
+  content: '⭐';
+  position: absolute;
+  top: -9px;
+  right: -7px;
+  font-size: 17px;
+  text-shadow: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+  animation: aparecer 0.4s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+@keyframes latido {
+  50% {
+    transform: translateY(-3px) scale(1.16);
+  }
+}
+
+/* --- Botones de abajo --- */
+
+#abajo {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 14px calc(env(safe-area-inset-bottom) + 18px);
+  pointer-events: none;
+}
+
+#abajo > * {
+  pointer-events: auto;
+}
+
+#parlante,
+#otra-vez {
+  width: 68px;
+  height: 68px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--azul);
+  box-shadow: 0 6px 0 var(--azul-osc);
+}
+
+#otra-vez {
+  width: 54px;
+  height: 54px;
+  background: var(--naranja);
+  box-shadow: 0 5px 0 var(--naranja-osc);
+}
+
+#parlante:active,
+#otra-vez:active {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 var(--azul-osc);
+}
+
+#parlante svg {
+  width: 40px;
+  height: 40px;
+}
+
+#otra-vez svg {
+  width: 30px;
+  height: 30px;
+}
+
+#parlante.hablando {
+  animation: hablar 0.5s ease-in-out infinite;
+}
+
+#parlante.hablando .onda {
+  animation: onda 0.5s ease-in-out infinite alternate;
+}
+
+#parlante.hablando .onda2 {
+  animation-delay: 0.25s;
+}
+
+@keyframes hablar {
+  50% {
+    transform: scale(1.08) rotate(-4deg);
+  }
+}
+
+@keyframes onda {
+  to {
+    opacity: 0.3;
+  }
+}
+
+#palabra {
+  min-width: 140px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--tinta);
+  font-weight: 700;
+  font-size: clamp(26px, 8vw, 38px);
+  text-align: center;
+  box-shadow: 0 5px 0 rgba(75, 63, 114, 0.18);
+}
+
+#palabra.salta {
+  animation: aparecer 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+@keyframes aparecer {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* --- Celebración --- */
+
+#bravo {
+  position: fixed;
+  left: 50%;
+  top: 22%;
+  transform: translate(-50%, -50%) scale(0);
+  padding: 12px 30px;
+  border-radius: 999px;
+  background: var(--verde);
+  color: #fff;
+  font-weight: 700;
+  font-size: clamp(32px, 10vw, 54px);
+  white-space: nowrap;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 7px 0 var(--verde-osc),
+    0 0 0 6px #fff;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    transform 0.25s ease-in,
+    opacity 0.25s;
+}
+
+#bravo.visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1) rotate(-3deg);
+  transition: transform 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+/* --- Pantallas de inicio y final --- */
+
+#inicio,
+#final {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.35));
+  transition:
+    opacity 0.35s,
+    transform 0.35s;
+}
+
+#inicio.oculto {
+  opacity: 0;
+  transform: scale(1.1);
+  pointer-events: none;
+}
+
+#final {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.9);
+}
+
+#final.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 700;
+  font-size: clamp(40px, 12vw, 68px);
+  line-height: 1.05;
+  color: #fff;
+  -webkit-text-stroke: 2px var(--tinta);
+  paint-order: stroke fill;
+  text-shadow:
+    0 5px 0 var(--tinta),
+    0 8px 16px rgba(75, 63, 114, 0.25);
+}
+
+#inicio p,
+#final p {
+  margin: 0 0 12px;
+  font-size: clamp(18px, 5.5vw, 24px);
+  font-weight: 500;
+}
+
+#jugar,
+#de-nuevo {
+  padding: 16px 44px;
+  border-radius: 22px;
+  background: var(--verde);
+  color: #fff;
+  font-weight: 700;
+  font-size: clamp(26px, 8vw, 34px);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 7px 0 var(--verde-osc);
+  animation: latido-boton 1.2s ease-in-out infinite;
+}
+
+#jugar:active,
+#de-nuevo:active {
+  transform: translateY(6px);
+  box-shadow: 0 1px 0 var(--verde-osc);
+  animation: none;
+}
+
+@keyframes latido-boton {
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.burbujas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 340px;
+  margin-bottom: 8px;
+}
+
+.burbujas span {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c);
+  color: #fff;
+  font-weight: 700;
+  font-size: 28px;
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--c) 70%, #000);
+  animation: flotar 1.8s ease-in-out var(--d) infinite;
+}
+
+@keyframes flotar {
+  50% {
+    transform: translateY(-12px) rotate(6deg);
+  }
+}
+
+.trofeo {
+  font-size: 110px;
+  animation: flotar 1.6s ease-in-out infinite;
+}

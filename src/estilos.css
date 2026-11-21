@@ -20,16 +20,27 @@ body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  background: #6cc8ff;
   color: var(--tinta);
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
 
+/* Si algo de la pantalla quedara sin cubrir, arriba se ve cielo y abajo pasto. */
+html {
+  background: linear-gradient(#6cc8ff 50%, #7cc95f 50%);
+}
+
+/* La app instalada en iOS (barra de estado translúcida) informa un alto de
+   ventana más corto que la pantalla: con 100% y position: fixed quedaba una
+   franja abajo. El cuerpo mide 100vh y todo se ubica dentro de él. */
 body {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
 }
 
 button {
@@ -40,7 +51,7 @@ button {
 }
 
 #lienzo {
-  position: fixed;
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -53,7 +64,7 @@ button {
 /* Las columnas las pone main.ts según el modo: todo en una fila si hay ancho,
    si no, filas de 10 números, 5 vocales, 5 sílabas o 5 palabras (una por nivel). */
 #barra {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -136,7 +147,7 @@ button {
 /* El botón de modos y el de empezar de nuevo van en las esquinas; al medio la
    imagen, el parlante y la palabra. */
 #abajo {
-  position: fixed;
+  position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
@@ -308,7 +319,7 @@ button {
 /* --- Celebración --- */
 
 #bravo {
-  position: fixed;
+  position: absolute;
   left: 50%;
   top: 22%;
   transform: translate(-50%, -50%) scale(0);
@@ -355,7 +366,7 @@ body:not([data-pantalla='juego']) :is(#barra, #abajo, #bravo) {
 #final,
 #menu,
 #silabas {
-  position: fixed;
+  position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;

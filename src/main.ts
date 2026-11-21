@@ -515,8 +515,11 @@ document.addEventListener('dblclick', (e) => e.preventDefault())
 // --- Bucle ------------------------------------------------------------------------
 
 function redimensionar(): void {
-  ancho = innerWidth
-  alto = innerHeight
+  // Se mide el cuerpo y no la ventana: en la app instalada en iOS innerHeight
+  // queda corto (ver estilos.css).
+  const r = document.body.getBoundingClientRect()
+  ancho = Math.round(r.width)
+  alto = Math.round(r.height)
   renderer.setSize(ancho, alto)
   columnasBarra()
   Object.assign(camara, { left: -ancho / 2, right: ancho / 2, top: alto / 2, bottom: -alto / 2 })

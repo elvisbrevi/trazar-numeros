@@ -516,11 +516,12 @@ document.addEventListener('dblclick', (e) => e.preventDefault())
 
 function redimensionar(): void {
   // Se mide el cuerpo y no la ventana: en la app instalada en iOS innerHeight
-  // queda corto (ver estilos.css).
+  // no siempre coincide con lo visible. El lienzo se estira por CSS al cuerpo
+  // (setSize sin estilos), así nunca queda más chico ni más grande que él.
   const r = document.body.getBoundingClientRect()
   ancho = Math.round(r.width)
   alto = Math.round(r.height)
-  renderer.setSize(ancho, alto)
+  renderer.setSize(ancho, alto, false)
   columnasBarra()
   Object.assign(camara, { left: -ancho / 2, right: ancho / 2, top: alto / 2, bottom: -alto / 2 })
   camara.updateProjectionMatrix()
@@ -529,6 +530,12 @@ function redimensionar(): void {
 }
 
 addEventListener('resize', redimensionar)
+// iOS ajusta el tamaño de la app instalada justo después de abrirla sin avisar
+// con «resize»: se vuelve a medir cada vez que el cuerpo cambia.
+new ResizeObserver(() => {
+  const r = document.body.getBoundingClientRect()
+  if (Math.round(r.width) !== ancho || Math.round(r.height) !== alto) redimensionar()
+}).observe(document.body)
 armarBarra()
 pintarPalabra()
 redimensionar()

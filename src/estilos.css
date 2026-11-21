@@ -26,21 +26,20 @@ body {
   -webkit-touch-callout: none;
 }
 
-/* Si algo de la pantalla quedara sin cubrir, arriba se ve cielo y abajo pasto. */
+/* Si algo de la pantalla quedara sin cubrir, arriba se ve cielo y abajo pasto.
+   El color de fondo es el que Safari 26 usa para teñir la barra de estado. */
 html {
-  background: linear-gradient(#6cc8ff 50%, #7cc95f 50%);
+  background: #6cc8ff linear-gradient(#6cc8ff 50%, #7cc95f 50%);
 }
 
-/* La app instalada en iOS (barra de estado translúcida) informa un alto de
-   ventana más corto que la pantalla: con 100% y position: fixed quedaba una
-   franja abajo. El cuerpo mide 100vh y todo se ubica dentro de él. */
+/* El cuerpo ocupa justo el área visible (inset: 0) y todo se ubica dentro de
+   él; main.ts mide el cuerpo para el lienzo. Con 100vh, en la app instalada en
+   iOS (barra de estado normal) quedaba más alto que la pantalla y lo de abajo
+   se cortaba. */
 body {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  height: 100lvh;
+  inset: 0;
+  height: auto;
 }
 
 button {

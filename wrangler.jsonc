@@ -2,6 +2,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "trazar-numeros",
   "compatibility_date": "2026-11-01",
+  // Dominio propio; workers.dev sigue activo para la app ya instalada y las vistas previas.
+  "routes": [{ "pattern": "escribir.elvisbrevi.cl", "custom_domain": true }],
+  // Con rutas, wrangler apaga workers.dev si no se pide explícitamente.
+  "workers_dev": true,
+  "preview_urls": true,
   // Worker de sólo assets estáticos: todo el juego corre en el navegador.
   "assets": {
     "directory": "./dist",

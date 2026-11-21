@@ -28,7 +28,8 @@ Cómo se juega:
   con ⭐ (se guarda en el navegador, por juego).
 
 Hecho con [three.js](https://threejs.org) y Vite; se publica como Worker de
-Cloudflare de sólo assets estáticos. Las ilustraciones (`public/img`) se
+Cloudflare de sólo assets estáticos en https://escribir.elvisbrevi.cl (también
+responde en trazar-numeros.xtym8trk2f.workers.dev). Las ilustraciones (`public/img`) se
 generaron con la Images API de OpenAI en hojas de seis por llamada y se
 recortaron a 256 px en WebP.
 

@@ -6,7 +6,7 @@ import { PASO, type Punto } from './digitos'
 import { Fondo } from './fondo'
 import { geoConfeti, geoEstrella } from './formas'
 import { glifosDe } from './letras'
-import { MODOS, SILABAS, modoPorId, type IdModo, type Item, type Modo } from './modos'
+import { MODOS, SILABAS, modoPorId, siguienteEnRonda, type IdModo, type Item, type Modo } from './modos'
 import { VistaNumero, medirEscala } from './numero'
 import { Particulas } from './particulas'
 import { desbloquearAudio, sonidoAvance, sonidoElegir, sonidoFanfarria, sonidoFuera, sonidoTrazoListo } from './sonido'
@@ -72,6 +72,9 @@ function leerHechos(id: IdModo): Set<string> {
 }
 const hechosPorModo = new Map(MODOS.map((m) => [m.id, leerHechos(m.id)]))
 const hechos = () => hechosPorModo.get(modo.id)!
+// Lo escrito en esta partida: el final llega al completar la ronda, no por las
+// estrellas guardadas, para poder volver a jugar un juego ya terminado.
+const ronda = new Set<string>()
 
 // Inicio, menús y final ocupan toda la pantalla: mientras se ven, los controles
 // del juego y lo que se está trazando se esconden para no ensuciarlas.
@@ -230,17 +233,16 @@ function celebrar(): void {
     g.rotation.z = Math.sin(k * Math.PI * 4) * 0.06 * (1 - k)
   })
   hechos().add(actual.id)
+  ronda.add(actual.id)
   guardarHechos()
   pintarBarra()
   temporizador = window.setTimeout(avanzar, 2700)
 }
 
-/** Sigue con el próximo que falte (dando la vuelta); el final, sólo cuando están todos. */
+/** Sigue con el próximo que falte en la ronda; el final, sólo cuando están todos. */
 function avanzar(): void {
   bravo.classList.remove('visible')
-  const i = modo.items.indexOf(actual)
-  const resto = [...modo.items.slice(i + 1), ...modo.items.slice(0, i)]
-  const siguiente = resto.find((it) => !hechos().has(it.id))
+  const siguiente = siguienteEnRonda(modo.items, actual, ronda)
   if (siguiente) elegir(siguiente)
   else mostrarFinal()
 }
@@ -393,6 +395,7 @@ function cambiarModo(m: Modo): void {
   mostrar('juego')
   armarBarra()
   redimensionar()
+  ronda.clear()
   elegir(m.items.find((it) => !hechos().has(it.id)) ?? m.items[0])
 }
 
@@ -493,10 +496,10 @@ $('#jugar').addEventListener('click', () => {
   abrirMenu()
 })
 
+// Otra ronda desde el principio; las estrellas ganadas se quedan.
 $('#de-nuevo').addEventListener('click', () => {
   mostrar('juego')
-  hechos().clear()
-  guardarHechos()
+  ronda.clear()
   elegir(modo.items[0])
 })
 
@@ -552,7 +555,7 @@ renderer.setAnimationLoop(() => {
 // Para las pruebas automáticas: dónde está, en pantalla, el trazo que toca hacer.
 Object.assign(window, {
   __trazar: {
-    estado: () => ({ modo: modo.id, actual: actual.id, iTrazo: trazado?.iTrazo, celebrando, hechos: [...hechos()] }),
+    estado: () => ({ modo: modo.id, actual: actual.id, iTrazo: trazado?.iTrazo, celebrando, hechos: [...hechos()], ronda: [...ronda] }),
     trazoEnPantalla: () => {
       const g = vista!.grupo
       return trazado?.trazo?.slice(trazado.progreso).map((q) => ({ x: q.x * g.scale.x + g.position.x + ancho / 2, y: alto / 2 - (q.y * g.scale.y + g.position.y) }))

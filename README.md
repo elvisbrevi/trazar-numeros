@@ -22,8 +22,10 @@ Cómo se juega:
   niño se queda quieto, una manito le muestra el camino. El punto de la i se
   hace con sólo tocarlo.
 - 🔊 lo dice en español (síntesis de voz del navegador).
-- Al terminar: confeti, estrellas, «¡Muy bien!» y pasa al siguiente que falte.
-  Lo hecho queda con ⭐ (se guarda en el navegador, por juego).
+- Al terminar: confeti, estrellas, «¡Muy bien!» y pasa al siguiente. La
+  pantalla de «¡Lo lograste!» llega al completar todos en la partida, así un
+  juego ya terminado se puede volver a jugar entero. Lo hecho alguna vez queda
+  con ⭐ (se guarda en el navegador, por juego).
 
 Hecho con [three.js](https://threejs.org) y Vite; se publica como Worker de
 Cloudflare de sólo assets estáticos. Las ilustraciones (`public/img`) se

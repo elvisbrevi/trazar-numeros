@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PASO, type Punto } from './digitos'
 import { glifosDe } from './letras'
-import { MODOS } from './modos'
+import { MODOS, siguienteEnRonda } from './modos'
 import { Trazado } from './trazo'
 
 // Las imágenes que hay de verdad en public/img.
@@ -106,5 +106,24 @@ describe('Trazado', () => {
         expect(d).toBeLessThan(PASO * 1.01)
       }
     }
+  })
+})
+
+describe('siguienteEnRonda', () => {
+  const vocales = MODOS.find((m) => m.id === 'vocales')!.items
+
+  it('con todo ya ganado antes, igual sigue con el próximo de la ronda', () => {
+    const ronda = new Set([vocales[0].id])
+    expect(siguienteEnRonda(vocales, vocales[0], ronda)).toBe(vocales[1])
+  })
+
+  it('da la vuelta y salta los ya hechos en la ronda', () => {
+    const ronda = new Set(vocales.slice(1).map((it) => it.id))
+    expect(siguienteEnRonda(vocales, vocales[9], ronda)).toBe(vocales[0])
+  })
+
+  it('termina cuando la ronda está completa', () => {
+    const ronda = new Set(vocales.map((it) => it.id))
+    expect(siguienteEnRonda(vocales, vocales[3], ronda)).toBeUndefined()
   })
 })

@@ -178,4 +178,14 @@ export const MODOS: Modo[] = [
 /** Los modos que van dentro de «Sílabas» en el menú. */
 export const SILABAS: IdModo[] = ['silabas-m', 'silabas-p', 'palabras']
 
+/**
+ * El próximo elemento que falta en esta ronda, siguiendo el orden y dando la
+ * vuelta; undefined cuando la ronda está completa. Las estrellas guardadas no
+ * cuentan: un juego ya terminado otra vez se puede jugar entero.
+ */
+export function siguienteEnRonda(items: Item[], actual: Item, ronda: Set<string>): Item | undefined {
+  const i = items.indexOf(actual)
+  return [...items.slice(i + 1), ...items.slice(0, i + 1)].find((it) => !ronda.has(it.id))
+}
+
 export const modoPorId = (id: string): Modo | undefined => MODOS.find((m) => m.id === id)

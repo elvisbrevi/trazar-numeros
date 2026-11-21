@@ -1,19 +1,34 @@
-// Dibujo del número a trazar: la silueta difuminada, la guía punteada del
+// Dibujo del número o la palabra a trazar: la silueta difuminada, la guía punteada del
 // trazo actual, el relleno de color que sigue al dedo y el marcador de inicio.
 
 import * as THREE from 'three'
-import { ALTO, type Digito, type Punto } from './digitos'
+import type { Digito, Punto } from './digitos'
 import { Cinta, geoCirculo, geoFlecha, tono } from './formas'
 import type { Trazado } from './trazo'
 
-const SEPARACION = 0.3
+/** Espacio entre los dígitos de un número; las letras de una palabra van más juntas. */
+export const SEPARACION = 0.3
 /** Medio grosor del trazo, en unidades de la celda del dígito. */
 const GROSOR = 0.085
+/** Alto mínimo que se reserva, para que una minúscula sola no salga gigante. */
+const ALTO_MINIMO = 1.2
 
-/** Escala (px por unidad) para que el número quepa en el área disponible. */
-export function medirEscala(digitos: Digito[], ancho: number, alto: number): number {
-  const total = digitos.reduce((s, d) => s + d.ancho, 0) + SEPARACION * (digitos.length - 1)
-  return Math.min(ancho / total, alto / ALTO)
+/** Extensión vertical que ocupan de verdad los trazos (las minúsculas no llenan la celda). */
+function vertical(glifos: Digito[]): { abajo: number; arriba: number } {
+  let abajo = Infinity
+  let arriba = -Infinity
+  for (const g of glifos) for (const t of g.trazos) for (const q of t) {
+    abajo = Math.min(abajo, q.y)
+    arriba = Math.max(arriba, q.y)
+  }
+  return { abajo, arriba }
+}
+
+/** Escala (px por unidad) para que el texto quepa en el área disponible. */
+export function medirEscala(glifos: Digito[], ancho: number, alto: number, separacion = SEPARACION): number {
+  const total = glifos.reduce((s, d) => s + d.ancho, 0) + separacion * (glifos.length - 1)
+  const v = vertical(glifos)
+  return Math.min(ancho / total, alto / Math.max(ALTO_MINIMO, v.arriba - v.abajo))
 }
 
 type CapasTrazo = { guia: Cinta; borde: Cinta; relleno: Cinta; brillo: Cinta }
@@ -46,15 +61,18 @@ export class VistaNumero {
   private readonly materiales: THREE.Material[] = []
   private sacudida = 0
 
-  constructor(digitos: Digito[], escala: number, colores: string[]) {
+  constructor(digitos: Digito[], escala: number, colores: string[], separacion = SEPARACION) {
     const s = escala
-    const r = (this.radio = GROSOR * s)
-    const total = digitos.reduce((a, d) => a + d.ancho, 0) + SEPARACION * (digitos.length - 1)
+    // En palabras largas la escala es chica: un mínimo para que el trazo se vea y se pueda seguir.
+    const r = (this.radio = Math.max(GROSOR * s, 7))
+    const total = digitos.reduce((a, d) => a + d.ancho, 0) + separacion * (digitos.length - 1)
+    const v = vertical(digitos)
+    const medio = (v.abajo + v.arriba) / 2
     let x0 = 0
     digitos.forEach((d, i) => {
       const color = colores[i % colores.length]
       for (const trazo of d.trazos) {
-        const pts = trazo.map((q) => ({ x: (x0 + q.x - total / 2) * s, y: (q.y - ALTO / 2) * s }))
+        const pts = trazo.map((q) => ({ x: (x0 + q.x - total / 2) * s, y: (q.y - medio) * s }))
         this.trazos.push(pts)
         // Silueta difuminada: un halo blanco ancho y el cuerpo lila suave.
         const halo = new Cinta(pts, r * 2, '#ffffff', 1, 0.4)
@@ -78,7 +96,7 @@ export class VistaNumero {
         this.capas.push({ guia, borde, relleno, brillo })
         for (const c of [halo, cuerpo, guia, borde, relleno, brillo]) this.grupo.add(c.mesh)
       }
-      x0 += d.ancho + SEPARACION
+      x0 += d.ancho + separacion
     })
 
     // Marcador de dónde apoyar el dedo, con una flecha que indica la dirección.

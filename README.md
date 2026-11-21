@@ -1,18 +1,32 @@
-# ¡Escribe los números!
+# ¡A escribir!
 
-Juego para celulares en el que los niños aprenden a escribir los números del
-1 al 16 trazándolos con el dedo, al estilo de Duolingo ABC.
+Juego para celulares en el que los niños aprenden a escribir trazando con el
+dedo, al estilo de Duolingo ABC. El botón de la esquina de abajo a la izquierda
+abre el menú de juegos:
 
-- Arriba se elige el número; aparece difuminado con una guía punteada y un
+- **Números** del 1 al 20.
+- **Vocales** mayúsculas y minúsculas (A E I O U, a e i o u), cada una con un
+  dibujo que empieza con ella (abeja, elefante, iglú, oso, uva).
+- **Sílabas**, en tres partes: *ma me mi mo mu*, *pa pe pi po pu* y
+  **Palabras** que se forman con ellas, en dos niveles: primero con una sola
+  consonante (mamá, papá, papa, mimo, emú) y luego mezcladas o más largas
+  (mapa, puma, mopa, apio, momia). Todas tienen su dibujo.
+
+Cómo se juega:
+
+- Arriba se elige qué escribir; aparece difuminado con una guía punteada y un
   círculo verde que marca dónde empezar y hacia dónde ir.
 - El color sigue al dedo sólo si se recorre el trazo en su dirección. Si el
-  niño se queda quieto, una manito le muestra el camino.
-- 🔊 dice el número en español (síntesis de voz del navegador).
-- Al terminar: confeti, estrellas, «¡Muy bien!» y pasa al siguiente. Los
-  números hechos quedan con ⭐ (se guardan en el navegador).
+  niño se queda quieto, una manito le muestra el camino. El punto de la i se
+  hace con sólo tocarlo.
+- 🔊 lo dice en español (síntesis de voz del navegador).
+- Al terminar: confeti, estrellas, «¡Muy bien!» y pasa al siguiente que falte.
+  Lo hecho queda con ⭐ (se guarda en el navegador, por juego).
 
 Hecho con [three.js](https://threejs.org) y Vite; se publica como Worker de
-Cloudflare de sólo assets estáticos.
+Cloudflare de sólo assets estáticos. Las ilustraciones (`public/img`) se
+generaron con la Images API de OpenAI en hojas de seis por llamada y se
+recortaron a 256 px en WebP.
 
 ## Desarrollo
 
@@ -26,6 +40,8 @@ npm run deploy   # check + wrangler deploy
 ## Estructura
 
 - `src/digitos.ts`: trazos de cada dígito (orden y dirección de escritura).
+- `src/letras.ts`: trazos de las vocales, la m y la p (con tildes), y `glifosDe`.
+- `src/modos.ts`: los juegos y lo que se traza en cada uno, con sus palabras e imágenes.
 - `src/trazo.ts`: lógica del trazado, sin dibujo (con pruebas en `trazo.test.ts`).
 - `src/numero.ts`: dibujo del número (silueta, guía, relleno, marcador, manito).
 - `src/fondo.ts`: cielo, sol, nubes, globos y colinas.

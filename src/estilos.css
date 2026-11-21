@@ -48,9 +48,10 @@ button {
   display: block;
 }
 
-/* --- Barra de números --- */
+/* --- Barra de arriba --- */
 
-/* 16 números: dos filas de 8 en el celular parado, una sola fila si hay ancho. */
+/* Las columnas las pone main.ts según el modo: todo en una fila si hay ancho,
+   si no, filas de 10 números, 5 vocales, 5 sílabas o 5 palabras (una por nivel). */
 #barra {
   position: fixed;
   top: 0;
@@ -86,10 +87,19 @@ button {
     box-shadow 0.15s;
 }
 
-@media (min-width: 820px), (orientation: landscape) and (min-width: 600px) {
-  #barra {
-    grid-template-columns: repeat(16, minmax(0, 52px));
-  }
+#barra.con-imagen button {
+  height: clamp(48px, 13vw, 62px);
+  padding: 3px;
+  background: #fff;
+  border: 3px solid var(--color);
+}
+
+#barra.con-imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 9px;
+  pointer-events: none;
 }
 
 #barra button:active {
@@ -123,27 +133,91 @@ button {
 
 /* --- Botones de abajo --- */
 
+/* El botón de modos y el de empezar de nuevo van en las esquinas; al medio la
+   imagen, el parlante y la palabra. */
 #abajo {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
   padding: 10px 14px calc(env(safe-area-inset-bottom) + 18px);
   pointer-events: none;
 }
 
-#abajo > * {
+#abajo button,
+#dibujo {
   pointer-events: auto;
+}
+
+#centro {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#centro .fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#dibujo {
+  width: clamp(84px, min(30vw, 17vh), 150px);
+  aspect-ratio: 1;
+  padding: 6px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 5px 0 rgba(75, 63, 114, 0.18);
+  object-fit: contain;
+  animation: aparecer 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+#dibujo[hidden] {
+  display: none;
+}
+
+/* Celular acostado: la imagen al lado de la palabra para dejar alto al trazo. */
+@media (max-height: 520px) {
+  #centro {
+    flex-direction: row;
+  }
+
+  #dibujo {
+    width: 76px;
+  }
+}
+
+#modo {
+  width: 54px;
+  height: 54px;
+  flex: none;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: #8b5cf6;
+  box-shadow: 0 5px 0 #6d3fd6;
+}
+
+#modo svg {
+  width: 32px;
+  height: 32px;
+}
+
+#modo:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #6d3fd6;
 }
 
 #parlante,
 #otra-vez {
-  width: 68px;
-  height: 68px;
+  width: 62px;
+  height: 62px;
   flex: none;
   border-radius: 50%;
   display: grid;
@@ -166,8 +240,8 @@ button {
 }
 
 #parlante svg {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
 }
 
 #otra-vez svg {
@@ -200,8 +274,9 @@ button {
 }
 
 #palabra {
-  min-width: 140px;
-  padding: 10px 22px;
+  min-width: 0;
+  padding: 8px 18px;
+  white-space: nowrap;
   border-radius: 999px;
   background: #fff;
   color: var(--tinta);
@@ -209,6 +284,14 @@ button {
   font-size: clamp(26px, 8vw, 38px);
   text-align: center;
   box-shadow: 0 5px 0 rgba(75, 63, 114, 0.18);
+}
+
+#palabra.larga {
+  font-size: clamp(21px, 6vw, 34px);
+}
+
+#palabra b {
+  color: #ff5d8f;
 }
 
 #palabra.salta {
@@ -256,7 +339,8 @@ button {
 /* --- Pantallas de inicio y final --- */
 
 #inicio,
-#final {
+#final,
+#menu {
   position: fixed;
   inset: 0;
   display: flex;
@@ -278,13 +362,15 @@ button {
   pointer-events: none;
 }
 
-#final {
+#final,
+#menu {
   opacity: 0;
   pointer-events: none;
   transform: scale(0.9);
 }
 
-#final.visible {
+#final.visible,
+#menu.visible {
   opacity: 1;
   pointer-events: auto;
   transform: none;
@@ -309,6 +395,21 @@ h2 {
   margin: 0 0 12px;
   font-size: clamp(18px, 5.5vw, 24px);
   font-weight: 500;
+}
+
+#otro-juego {
+  padding: 12px 30px;
+  border-radius: 18px;
+  background: #8b5cf6;
+  color: #fff;
+  font-weight: 700;
+  font-size: clamp(20px, 6vw, 26px);
+  box-shadow: 0 6px 0 #6d3fd6;
+}
+
+#otro-juego:active {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 #6d3fd6;
 }
 
 #jugar,
@@ -369,4 +470,133 @@ h2 {
 .trofeo {
   font-size: 110px;
   animation: flotar 1.6s ease-in-out infinite;
+}
+
+/* --- Menú de juegos --- */
+
+#menu {
+  justify-content: safe center;
+  gap: 10px;
+  overflow-y: auto;
+  padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 20px);
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.75));
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+#menu h2 {
+  font-size: clamp(32px, 9vw, 50px);
+  margin-bottom: 6px;
+}
+
+#menu h3 {
+  margin: 8px 0 0;
+  font-size: clamp(22px, 6vw, 28px);
+  font-weight: 700;
+}
+
+#cerrar-menu {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 12px);
+  right: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--tinta);
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: 0 4px 0 rgba(75, 63, 114, 0.25);
+}
+
+.tarjetas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  max-width: 560px;
+}
+
+.tarjeta {
+  width: clamp(140px, 42vw, 170px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 10px 10px;
+  border-radius: 22px;
+  background: #fff;
+  color: var(--tinta);
+  box-shadow: 0 6px 0 rgba(75, 63, 114, 0.22);
+}
+
+.tarjeta:active {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 rgba(75, 63, 114, 0.22);
+}
+
+.tarjeta.actual {
+  outline: 4px solid var(--verde);
+}
+
+.tarjeta .muestra {
+  font-size: clamp(22px, 6.2vw, 28px);
+  line-height: 1.1;
+  font-weight: 700;
+  color: #ff5d8f;
+  text-wrap: balance;
+}
+
+.tarjeta:nth-child(2n) .muestra {
+  color: var(--azul);
+}
+
+.tarjeta .nombre {
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.tarjeta .avance {
+  font-size: 15px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* Celular acostado: tarjetas más bajas para que el menú quepa sin desplazarse. */
+@media (max-height: 520px) {
+  #menu {
+    gap: 6px;
+  }
+
+  #menu h2 {
+    font-size: 30px;
+    margin: 0;
+  }
+
+  #menu h3 {
+    margin: 0;
+    font-size: 20px;
+  }
+
+  .tarjetas {
+    max-width: none;
+    gap: 10px;
+  }
+
+  .tarjeta {
+    width: 150px;
+    padding: 8px 8px 6px;
+  }
+
+  .tarjeta .muestra {
+    font-size: 20px;
+  }
+
+  .tarjeta .nombre {
+    font-size: 16px;
+  }
+
+  .tarjeta .avance {
+    font-size: 13px;
+  }
 }

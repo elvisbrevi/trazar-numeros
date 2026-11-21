@@ -17,6 +17,10 @@ export const PALABRAS: Record<number, string> = {
   14: 'catorce',
   15: 'quince',
   16: 'dieciséis',
+  17: 'diecisiete',
+  18: 'dieciocho',
+  19: 'diecinueve',
+  20: 'veinte',
 }
 
 // Primero las variantes latinoamericanas; si no hay, cualquier español.

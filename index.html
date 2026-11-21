@@ -14,7 +14,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <title>¡A escribir!</title>
   </head>
-  <body>
+  <body data-pantalla="inicio">
     <canvas id="lienzo" aria-label="Zona para trazar con el dedo"></canvas>
 
     <nav id="barra" aria-label="Elige qué escribir"></nav>
@@ -53,7 +53,7 @@
 
     <section id="inicio">
       <div class="burbujas" aria-hidden="true"></div>
-      <h1>¡A<br />escribir!</h1>
+      <h1>¡A <br />escribir!</h1>
       <p>Sigue el camino con tu dedito ✏️</p>
       <button id="jugar" type="button">¡A jugar!</button>
     </section>
@@ -67,11 +67,18 @@
     </section>
 
     <section id="menu" aria-label="Elige un juego">
-      <button id="cerrar-menu" type="button" aria-label="Cerrar">✕</button>
+      <button class="cerrar" type="button" aria-label="Volver al juego">✕</button>
       <h2>¿Qué escribimos?</h2>
-      <div id="modos-basicos" class="tarjetas"></div>
-      <h3>Sílabas</h3>
-      <div id="modos-silabas" class="tarjetas"></div>
+      <div class="baldosas"></div>
+    </section>
+
+    <section id="silabas" aria-label="Elige sílabas o palabras">
+      <button class="volver" type="button" aria-label="Volver">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M29 10 15 24l14 14" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <button class="cerrar" type="button" aria-label="Volver al juego">✕</button>
+      <h2>Sílabas</h2>
+      <div class="baldosas"></div>
     </section>
 
     <script type="module" src="./src/main.ts"></script>

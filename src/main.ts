@@ -6,7 +6,7 @@ import { PASO, type Punto } from './digitos'
 import { Fondo } from './fondo'
 import { geoConfeti, geoEstrella } from './formas'
 import { glifosDe } from './letras'
-import { MODOS, modoPorId, type IdModo, type Item, type Modo } from './modos'
+import { MODOS, SILABAS, modoPorId, type IdModo, type Item, type Modo } from './modos'
 import { VistaNumero, medirEscala } from './numero'
 import { Particulas } from './particulas'
 import { desbloquearAudio, sonidoAvance, sonidoElegir, sonidoFanfarria, sonidoFuera, sonidoTrazoListo } from './sonido'
@@ -28,6 +28,7 @@ const dibujo = $<HTMLImageElement>('#dibujo')
 const parlante = $<HTMLButtonElement>('#parlante')
 const bravo = $('#bravo')
 const menu = $('#menu')
+const menuSilabas = $('#silabas')
 
 // --- Escena ---------------------------------------------------------------
 
@@ -72,6 +73,17 @@ function leerHechos(id: IdModo): Set<string> {
 const hechosPorModo = new Map(MODOS.map((m) => [m.id, leerHechos(m.id)]))
 const hechos = () => hechosPorModo.get(modo.id)!
 
+// Inicio, menús y final ocupan toda la pantalla: mientras se ven, los controles
+// del juego y lo que se está trazando se esconden para no ensuciarlas.
+type Pantalla = 'inicio' | 'menu' | 'silabas' | 'final' | 'juego'
+const pantalla = () => document.body.dataset.pantalla as Pantalla
+
+function mostrar(p: Pantalla): void {
+  document.body.dataset.pantalla = p
+  if (vista) vista.grupo.visible = p === 'juego'
+  if (p === 'juego' && !celebrando) quieto = 0
+}
+
 type Anim = { t: number; dur: number; paso: (k: number) => void }
 const anims: Anim[] = []
 const animar = (dur: number, paso: (k: number) => void) => anims.push({ t: 0, dur, paso })
@@ -103,6 +115,7 @@ function construir(conservar: boolean): void {
   const escala = medirEscala(glifos, a.ancho * 0.86, a.alto * 0.8, modo.separacion)
   vista = new VistaNumero(glifos, escala, colores(actual), modo.separacion)
   vista.grupo.position.set(0, a.cy, 0)
+  vista.grupo.visible = pantalla() === 'juego'
   escena.add(vista.grupo)
   trazado = new Trazado(vista.trazos, {
     tolerancia: Math.max(0.2 * escala, 30),
@@ -206,6 +219,8 @@ function celebrar(): void {
   navigator.vibrate?.([40, 60, 40])
   const frase = alAzar(FRASES)
   bravo.textContent = frase
+  // Sobre la barra de arriba, para no tapar lo que se acaba de escribir.
+  bravo.style.top = `${Math.max(56, barra.getBoundingClientRect().bottom / 2)}px`
   bravo.classList.add('visible')
   setTimeout(() => decir(frase), 400)
   lluviaConfeti(150)
@@ -217,20 +232,22 @@ function celebrar(): void {
   hechos().add(actual.id)
   guardarHechos()
   pintarBarra()
-  temporizador = window.setTimeout(() => {
-    bravo.classList.remove('visible')
-    // Sigue con el próximo que falte (dando la vuelta); el final, sólo cuando están todos.
-    const i = modo.items.indexOf(actual)
-    const resto = [...modo.items.slice(i + 1), ...modo.items.slice(0, i)]
-    const siguiente = resto.find((it) => !hechos().has(it.id))
-    if (siguiente) elegir(siguiente)
-    else mostrarFinal()
-  }, 2700)
+  temporizador = window.setTimeout(avanzar, 2700)
+}
+
+/** Sigue con el próximo que falte (dando la vuelta); el final, sólo cuando están todos. */
+function avanzar(): void {
+  bravo.classList.remove('visible')
+  const i = modo.items.indexOf(actual)
+  const resto = [...modo.items.slice(i + 1), ...modo.items.slice(0, i)]
+  const siguiente = resto.find((it) => !hechos().has(it.id))
+  if (siguiente) elegir(siguiente)
+  else mostrarFinal()
 }
 
 function mostrarFinal(): void {
   $('#final p').textContent = modo.final
-  $('#final').classList.add('visible')
+  mostrar('final')
   lluviaConfeti(240)
   sonidoFanfarria()
   setTimeout(() => decir(`¡Lo lograste! ${modo.final}`), 500)
@@ -373,49 +390,74 @@ function armarBarra(): void {
 function cambiarModo(m: Modo): void {
   modo = m
   localStorage.setItem(CLAVE_MODO, m.id)
+  mostrar('juego')
   armarBarra()
   redimensionar()
   elegir(m.items.find((it) => !hechos().has(it.id)) ?? m.items[0])
 }
 
-// --- Menú de modos ----------------------------------------------------------------
+// --- Menús ------------------------------------------------------------------------
 
-function abrirMenu(): void {
-  clearTimeout(temporizador)
-  for (const t of menu.querySelectorAll<HTMLElement>('[data-modo]')) {
-    const m = modoPorId(t.dataset.modo!)!
-    t.classList.toggle('actual', m === modo)
-    t.querySelector('.avance')!.textContent = `⭐ ${hechosPorModo.get(m.id)!.size}/${m.items.length}`
-  }
-  menu.classList.add('visible')
-}
-
-function tarjetaModo(m: Modo): HTMLButtonElement {
+/** Una baldosa grande del menú, del color del juego, con su dibujo y sus estrellas. */
+function baldosa(nombre: string, detalle: string, color: string, icono: Modo['icono'], alTocar: () => void): HTMLButtonElement {
   const b = document.createElement('button')
   b.type = 'button'
-  b.className = 'tarjeta'
-  b.dataset.modo = m.id
-  const muestra = document.createElement('span')
-  muestra.className = 'muestra'
-  muestra.textContent = m.muestra
-  const nombre = document.createElement('span')
-  nombre.className = 'nombre'
-  nombre.textContent = m.nombre
+  b.className = 'baldosa'
+  b.style.setProperty('--color', color)
+  const circulo = document.createElement('span')
+  circulo.className = 'icono'
+  if (icono.imagen) {
+    const im = document.createElement('img')
+    im.src = icono.imagen
+    im.alt = ''
+    circulo.append(im)
+  } else {
+    circulo.textContent = icono.texto ?? ''
+  }
+  const textos = document.createElement('span')
+  textos.className = 'textos'
+  const n = document.createElement('span')
+  n.className = 'nombre'
+  n.textContent = nombre
+  const d = document.createElement('span')
+  d.className = 'detalle'
+  d.textContent = detalle
+  textos.append(n, d)
   const avance = document.createElement('span')
   avance.className = 'avance'
-  b.append(muestra, nombre, avance)
+  b.append(circulo, textos, avance)
   b.addEventListener('click', () => {
     desbloquearAudio()
     sonidoElegir()
-    menu.classList.remove('visible')
-    $('#final').classList.remove('visible')
-    cambiarModo(m)
+    alTocar()
   })
   return b
 }
 
-$('#modos-basicos').append(tarjetaModo(modoPorId('numeros')!), tarjetaModo(modoPorId('vocales')!))
-$('#modos-silabas').append(tarjetaModo(modoPorId('silabas-m')!), tarjetaModo(modoPorId('silabas-p')!), tarjetaModo(modoPorId('palabras')!))
+function baldosaModo(m: Modo): HTMLButtonElement {
+  const b = baldosa(m.nombre, m.detalle, m.color, m.icono, () => cambiarModo(m))
+  b.dataset.modos = m.id
+  return b
+}
+
+const silabas = SILABAS.map((id) => modoPorId(id)!)
+const grupoSilabas = baldosa('Sílabas', 'ma, pa y palabras', '#ff9600', { texto: 'ma' }, () => abrirMenu('silabas'))
+grupoSilabas.dataset.modos = SILABAS.join(' ')
+menu.querySelector('.baldosas')!.append(...MODOS.filter((m) => !SILABAS.includes(m.id)).map(baldosaModo), grupoSilabas)
+menuSilabas.querySelector('.baldosas')!.append(...silabas.map(baldosaModo))
+
+function abrirMenu(cual: 'menu' | 'silabas' = 'menu'): void {
+  clearTimeout(temporizador)
+  bravo.classList.remove('visible')
+  for (const b of document.querySelectorAll<HTMLElement>('.baldosa')) {
+    const ms = b.dataset.modos!.split(' ').map((id) => modoPorId(id)!)
+    const listos = ms.reduce((n, m) => n + hechosPorModo.get(m.id)!.size, 0)
+    const total = ms.reduce((n, m) => n + m.items.length, 0)
+    b.classList.toggle('actual', ms.includes(modo))
+    b.querySelector('.avance')!.textContent = `⭐ ${listos}/${total}`
+  }
+  mostrar(cual)
+}
 
 $('#modo').addEventListener('click', () => {
   desbloquearAudio()
@@ -423,9 +465,16 @@ $('#modo').addEventListener('click', () => {
   abrirMenu()
 })
 
-$('#cerrar-menu').addEventListener('click', () => {
-  menu.classList.remove('visible')
-  if (!celebrando) quieto = 0
+// Si se abrió el menú en plena celebración, al volver se sigue con el próximo.
+for (const c of document.querySelectorAll('.cerrar')) {
+  c.addEventListener('click', () => {
+    mostrar('juego')
+    if (celebrando) avanzar()
+  })
+}
+$('#silabas .volver').addEventListener('click', () => {
+  sonidoElegir()
+  abrirMenu()
 })
 
 parlante.addEventListener('click', () => {
@@ -441,12 +490,11 @@ $('#otra-vez').addEventListener('click', () => {
 
 $('#jugar').addEventListener('click', () => {
   desbloquearAudio()
-  $('#inicio').classList.add('oculto')
   abrirMenu()
 })
 
 $('#de-nuevo').addEventListener('click', () => {
-  $('#final').classList.remove('visible')
+  mostrar('juego')
   hechos().clear()
   guardarHechos()
   elegir(modo.items[0])

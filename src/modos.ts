@@ -23,8 +23,10 @@ export type IdModo = 'numeros' | 'vocales' | 'silabas-m' | 'silabas-p' | 'palabr
 export type Modo = {
   id: IdModo
   nombre: string
-  /** Lo que se muestra en la tarjeta del menú. */
-  muestra: string
+  /** Baldosa del menú: color, lo que va en el círculo (texto o imagen) y una línea de ayuda. */
+  color: string
+  icono: { texto?: string; imagen?: string }
+  detalle: string
   items: Item[]
   /** Botones por fila en la barra cuando no caben todos en una. */
   porFila: number
@@ -93,7 +95,9 @@ export const MODOS: Modo[] = [
   {
     id: 'numeros',
     nombre: 'Números',
-    muestra: '1 2 3',
+    color: '#ff5d8f',
+    icono: { texto: '123' },
+    detalle: 'del 1 al 20',
     items: numeros,
     porFila: 10,
     separacion: 0.3,
@@ -102,7 +106,9 @@ export const MODOS: Modo[] = [
   {
     id: 'vocales',
     nombre: 'Vocales',
-    muestra: 'A e i O u',
+    color: '#1cb0f6',
+    icono: { texto: 'Aa' },
+    detalle: 'a e i o u',
     items: vocales,
     porFila: 5,
     separacion: 0.3,
@@ -110,8 +116,10 @@ export const MODOS: Modo[] = [
   },
   {
     id: 'silabas-m',
-    nombre: 'Sílabas con m',
-    muestra: 'ma me mi mo mu',
+    nombre: 'Con m',
+    color: '#2ecc71',
+    icono: { imagen: img('mano') },
+    detalle: 'ma me mi mo mu',
     items: silabas([
       ['ma', 'mano', 'mano'],
       ['me', 'mesa', 'mesa'],
@@ -125,8 +133,10 @@ export const MODOS: Modo[] = [
   },
   {
     id: 'silabas-p',
-    nombre: 'Sílabas con p',
-    muestra: 'pa pe pi po pu',
+    nombre: 'Con p',
+    color: '#8b5cf6',
+    icono: { imagen: img('pato') },
+    detalle: 'pa pe pi po pu',
     items: silabas([
       ['pa', 'pato', 'pato'],
       ['pe', 'pera', 'pera'],
@@ -141,7 +151,9 @@ export const MODOS: Modo[] = [
   {
     id: 'palabras',
     nombre: 'Palabras',
-    muestra: 'mamá mapa',
+    color: '#ff9600',
+    icono: { imagen: img('mama') },
+    detalle: 'mamá, mapa, puma…',
     items: PALABRAS_JUEGO.map(([palabra, imagen, fila]) => ({
       id: palabra,
       texto: palabra,
@@ -155,5 +167,8 @@ export const MODOS: Modo[] = [
     final: 'Escribiste todas las palabras',
   },
 ]
+
+/** Los modos que van dentro de «Sílabas» en el menú. */
+export const SILABAS: IdModo[] = ['silabas-m', 'silabas-p', 'palabras']
 
 export const modoPorId = (id: string): Modo | undefined => MODOS.find((m) => m.id === id)

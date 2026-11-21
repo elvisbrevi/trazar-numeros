@@ -26,14 +26,16 @@ body {
   -webkit-touch-callout: none;
 }
 
-/* Si algo de la pantalla quedara sin cubrir, arriba se ve cielo y abajo pasto. */
+/* Si algo de la pantalla quedara sin cubrir, arriba se ve cielo y abajo pasto.
+   El color de fondo es el que Safari 26 usa para teñir la barra de estado. */
 html {
-  background: linear-gradient(#6cc8ff 50%, #7cc95f 50%);
+  height: 100vh;
+  background: #6cc8ff linear-gradient(#6cc8ff 50%, #7cc95f 50%);
 }
 
-/* La app instalada en iOS (barra de estado translúcida) informa un alto de
-   ventana más corto que la pantalla: con 100% y position: fixed quedaba una
-   franja abajo. El cuerpo mide 100vh y todo se ubica dentro de él. */
+/* La app instalada en iOS puede informar un alto de ventana más corto que la
+   pantalla: con 100% y position: fixed quedaba una franja abajo. El cuerpo
+   mide 100vh y todo se ubica dentro de él. */
 body {
   position: fixed;
   top: 0;

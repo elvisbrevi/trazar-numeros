@@ -10,14 +10,14 @@ export type Digito = { ancho: number; trazos: Punto[][] }
 export const ALTO = 1.6
 export const PASO = 0.012
 
-const p = (x: number, y: number): Punto => ({ x, y })
+export const p = (x: number, y: number): Punto => ({ x, y })
 
-function linea(a: Punto, b: Punto): Punto[] {
+export function linea(a: Punto, b: Punto): Punto[] {
   return [a, b]
 }
 
 /** Arco de elipse; los ángulos van en grados y pueden decrecer (horario). */
-function arco(cx: number, cy: number, rx: number, ry: number, a0: number, a1: number): Punto[] {
+export function arco(cx: number, cy: number, rx: number, ry: number, a0: number, a1: number): Punto[] {
   const n = Math.max(2, Math.ceil(Math.abs(a1 - a0) / 2))
   const pts: Punto[] = []
   for (let i = 0; i <= n; i++) {
@@ -27,7 +27,7 @@ function arco(cx: number, cy: number, rx: number, ry: number, a0: number, a1: nu
   return pts
 }
 
-function bezier(p0: Punto, p1: Punto, p2: Punto, p3: Punto): Punto[] {
+export function bezier(p0: Punto, p1: Punto, p2: Punto, p3: Punto): Punto[] {
   const pts: Punto[] = []
   for (let i = 0; i <= 60; i++) {
     const t = i / 60
@@ -43,7 +43,7 @@ function bezier(p0: Punto, p1: Punto, p2: Punto, p3: Punto): Punto[] {
 }
 
 /** Une tramos consecutivos en un solo trazo (el final de uno es el inicio del otro). */
-function unir(...tramos: Punto[][]): Punto[] {
+export function unir(...tramos: Punto[][]): Punto[] {
   return tramos.flatMap((t, i) => (i === 0 ? t : t.slice(1)))
 }
 
@@ -69,7 +69,7 @@ export function remuestrear(pts: Punto[], paso = PASO): Punto[] {
   return salida
 }
 
-const DIGITOS: Record<string, Digito> = {
+export const DIGITOS: Record<string, Digito> = {
   '0': { ancho: 1, trazos: [arco(0.5, 0.8, 0.42, 0.78, 90, 450)] },
   '1': {
     ancho: 0.75,
@@ -132,15 +132,4 @@ const DIGITOS: Record<string, Digito> = {
     ancho: 1,
     trazos: [unir(arco(0.48, 1.14, 0.4, 0.44, 0, 360), linea(p(0.88, 1.14), p(0.88, 0)))],
   },
-}
-
-/** Dígitos de un número con sus trazos ya remuestreados. */
-export function digitosDe(n: number): Digito[] {
-  return String(n)
-    .split('')
-    .map((c) => {
-      const d = DIGITOS[c]
-      if (!d) throw new Error(`No hay trazos para el dígito ${c}`)
-      return { ancho: d.ancho, trazos: d.trazos.map((t) => remuestrear(t)) }
-    })
 }

@@ -48,9 +48,10 @@ button {
   display: block;
 }
 
-/* --- Barra de números --- */
+/* --- Barra de arriba --- */
 
-/* 16 números: dos filas de 8 en el celular parado, una sola fila si hay ancho. */
+/* Las columnas las pone main.ts según el modo: todo en una fila si hay ancho,
+   si no, filas de 10 números, 5 vocales, 5 sílabas o 5 palabras (una por nivel). */
 #barra {
   position: fixed;
   top: 0;
@@ -86,10 +87,19 @@ button {
     box-shadow 0.15s;
 }
 
-@media (min-width: 820px), (orientation: landscape) and (min-width: 600px) {
-  #barra {
-    grid-template-columns: repeat(16, minmax(0, 52px));
-  }
+#barra.con-imagen button {
+  height: clamp(48px, 13vw, 62px);
+  padding: 3px;
+  background: #fff;
+  border: 3px solid var(--color);
+}
+
+#barra.con-imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 9px;
+  pointer-events: none;
 }
 
 #barra button:active {
@@ -123,27 +133,91 @@ button {
 
 /* --- Botones de abajo --- */
 
+/* El botón de modos y el de empezar de nuevo van en las esquinas; al medio la
+   imagen, el parlante y la palabra. */
 #abajo {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
   padding: 10px 14px calc(env(safe-area-inset-bottom) + 18px);
   pointer-events: none;
 }
 
-#abajo > * {
+#abajo button,
+#dibujo {
   pointer-events: auto;
+}
+
+#centro {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#centro .fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#dibujo {
+  width: clamp(84px, min(30vw, 17vh), 150px);
+  aspect-ratio: 1;
+  padding: 6px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 5px 0 rgba(75, 63, 114, 0.18);
+  object-fit: contain;
+  animation: aparecer 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+#dibujo[hidden] {
+  display: none;
+}
+
+/* Celular acostado: la imagen al lado de la palabra para dejar alto al trazo. */
+@media (max-height: 520px) {
+  #centro {
+    flex-direction: row;
+  }
+
+  #dibujo {
+    width: 76px;
+  }
+}
+
+#modo {
+  width: 54px;
+  height: 54px;
+  flex: none;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: #8b5cf6;
+  box-shadow: 0 5px 0 #6d3fd6;
+}
+
+#modo svg {
+  width: 32px;
+  height: 32px;
+}
+
+#modo:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #6d3fd6;
 }
 
 #parlante,
 #otra-vez {
-  width: 68px;
-  height: 68px;
+  width: 62px;
+  height: 62px;
   flex: none;
   border-radius: 50%;
   display: grid;
@@ -166,8 +240,8 @@ button {
 }
 
 #parlante svg {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
 }
 
 #otra-vez svg {
@@ -200,8 +274,9 @@ button {
 }
 
 #palabra {
-  min-width: 140px;
-  padding: 10px 22px;
+  min-width: 0;
+  padding: 8px 18px;
+  white-space: nowrap;
   border-radius: 999px;
   background: #fff;
   color: var(--tinta);
@@ -209,6 +284,14 @@ button {
   font-size: clamp(26px, 8vw, 38px);
   text-align: center;
   box-shadow: 0 5px 0 rgba(75, 63, 114, 0.18);
+}
+
+#palabra.larga {
+  font-size: clamp(21px, 6vw, 34px);
+}
+
+#palabra b {
+  color: #ff5d8f;
 }
 
 #palabra.salta {
@@ -253,10 +336,25 @@ button {
   transition: transform 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
 }
 
-/* --- Pantallas de inicio y final --- */
+/* --- Pantallas: inicio, menús y final --- */
+
+/* Fuera del juego, los controles se esconden para que cada pantalla se vea limpia. */
+#barra,
+#abajo {
+  transition:
+    opacity 0.3s,
+    visibility 0.3s;
+}
+
+body:not([data-pantalla='juego']) :is(#barra, #abajo, #bravo) {
+  opacity: 0;
+  visibility: hidden;
+}
 
 #inicio,
-#final {
+#final,
+#menu,
+#silabas {
   position: fixed;
   inset: 0;
   display: flex;
@@ -266,26 +364,23 @@ button {
   gap: 14px;
   padding: 24px;
   text-align: center;
-  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.35));
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.15));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(0.94);
   transition:
     opacity 0.35s,
-    transform 0.35s;
+    transform 0.35s,
+    visibility 0.35s;
 }
 
-#inicio.oculto {
-  opacity: 0;
-  transform: scale(1.1);
-  pointer-events: none;
-}
-
-#final {
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.9);
-}
-
-#final.visible {
+body[data-pantalla='inicio'] #inicio,
+body[data-pantalla='final'] #final,
+body[data-pantalla='menu'] #menu,
+body[data-pantalla='silabas'] #silabas {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: none;
 }
@@ -309,6 +404,21 @@ h2 {
   margin: 0 0 12px;
   font-size: clamp(18px, 5.5vw, 24px);
   font-weight: 500;
+}
+
+#otro-juego {
+  padding: 12px 30px;
+  border-radius: 18px;
+  background: #8b5cf6;
+  color: #fff;
+  font-weight: 700;
+  font-size: clamp(20px, 6vw, 26px);
+  box-shadow: 0 6px 0 #6d3fd6;
+}
+
+#otro-juego:active {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 #6d3fd6;
 }
 
 #jugar,
@@ -369,4 +479,237 @@ h2 {
 .trofeo {
   font-size: 110px;
   animation: flotar 1.6s ease-in-out infinite;
+}
+
+/* --- Menús de juegos --- */
+
+/* Baldosas anchas del color de cada juego, con el mismo relieve que los botones
+   de la barra: un círculo blanco con el dibujo, el nombre y las estrellas. */
+#menu,
+#silabas {
+  justify-content: safe center;
+  gap: 16px;
+  overflow-y: auto;
+  padding: calc(env(safe-area-inset-top) + 24px) 18px calc(env(safe-area-inset-bottom) + 24px);
+}
+
+#menu h2,
+#silabas h2 {
+  font-size: clamp(34px, 10vw, 54px);
+}
+
+.cerrar,
+.volver {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 14px);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: var(--tinta);
+  font-size: 24px;
+  font-weight: 700;
+  box-shadow: 0 5px 0 rgba(75, 63, 114, 0.25);
+}
+
+.cerrar {
+  right: 16px;
+}
+
+.volver {
+  left: 16px;
+}
+
+.volver svg {
+  width: 30px;
+  height: 30px;
+}
+
+.cerrar:active,
+.volver:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 rgba(75, 63, 114, 0.25);
+}
+
+.baldosas {
+  width: min(100%, 440px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.baldosa {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px 12px 12px;
+  border-radius: 26px;
+  background: var(--color);
+  color: #fff;
+  text-align: left;
+  box-shadow:
+    0 7px 0 color-mix(in srgb, var(--color) 70%, #000),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.08),
+    inset 0 4px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.15s;
+}
+
+.baldosa:active {
+  transform: translateY(6px);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color) 70%, #000);
+}
+
+.baldosa.actual {
+  outline: 5px solid #fff;
+  outline-offset: 2px;
+}
+
+.baldosa .icono {
+  width: clamp(64px, 19vw, 84px);
+  aspect-ratio: 1;
+  flex: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--color);
+  font-weight: 700;
+  font-size: clamp(26px, 8vw, 34px);
+  box-shadow: inset 0 -4px 0 rgba(75, 63, 114, 0.12);
+}
+
+.baldosa .icono img {
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+}
+
+.baldosa .textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.baldosa .nombre {
+  font-weight: 700;
+  font-size: clamp(26px, 7.5vw, 34px);
+  line-height: 1.1;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+}
+
+.baldosa .detalle {
+  font-weight: 500;
+  font-size: clamp(16px, 4.6vw, 20px);
+  opacity: 0.95;
+}
+
+.baldosa .avance {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  font-weight: 700;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+/* Celular acostado: las baldosas en fila para que todo quepa sin desplazarse. */
+@media (max-height: 520px) {
+  #menu,
+  #silabas {
+    gap: 10px;
+  }
+
+  #menu h2,
+  #silabas h2 {
+    font-size: 32px;
+  }
+
+  .baldosas {
+    width: auto;
+    flex-direction: row;
+  }
+
+  .baldosa {
+    width: 210px;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 10px 12px;
+    text-align: center;
+  }
+
+  .baldosa .icono {
+    width: 72px;
+  }
+
+  .baldosa .nombre {
+    font-size: 24px;
+  }
+
+  .baldosa .detalle {
+    font-size: 15px;
+  }
+}
+
+/* Celular acostado: inicio y final más compactos para que quepan en el alto. */
+@media (max-height: 520px) {
+  #inicio,
+  #final {
+    gap: 8px;
+    padding: 12px 24px;
+  }
+
+  #inicio h1 br {
+    display: none;
+  }
+
+  h1,
+  #final h2 {
+    font-size: 44px;
+  }
+
+  #inicio p,
+  #final p {
+    margin-bottom: 4px;
+    font-size: 19px;
+  }
+
+  .burbujas {
+    max-width: none;
+    margin-bottom: 0;
+  }
+
+  .burbujas span {
+    width: 36px;
+    height: 36px;
+    font-size: 17px;
+  }
+
+  .trofeo {
+    font-size: 64px;
+  }
+
+  #jugar,
+  #de-nuevo {
+    padding: 10px 36px;
+    font-size: 26px;
+  }
+
+  #final {
+    flex-flow: row wrap;
+    align-content: center;
+  }
+
+  #final > :is(.trofeo, h2, p) {
+    flex-basis: 100%;
+  }
+
+  #final .trofeo {
+    flex-basis: auto;
+  }
 }

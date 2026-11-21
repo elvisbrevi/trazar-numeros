@@ -2,28 +2,33 @@ import '@fontsource/fredoka/latin-500.css'
 import '@fontsource/fredoka/latin-700.css'
 import './estilos.css'
 import * as THREE from 'three'
-import { PASO, digitosDe, type Punto } from './digitos'
+import { PASO, type Punto } from './digitos'
 import { Fondo } from './fondo'
 import { geoConfeti, geoEstrella } from './formas'
+import { glifosDe } from './letras'
+import { MODOS, SILABAS, modoPorId, siguienteEnRonda, type IdModo, type Item, type Modo } from './modos'
 import { VistaNumero, medirEscala } from './numero'
 import { Particulas } from './particulas'
 import { desbloquearAudio, sonidoAvance, sonidoElegir, sonidoFanfarria, sonidoFuera, sonidoTrazoListo } from './sonido'
 import { Trazado, type Resultado } from './trazo'
-import { PALABRAS, decir, hayVoz } from './voz'
+import { decir, hayVoz } from './voz'
 
-const NUMEROS = Array.from({ length: 16 }, (_, i) => i + 1)
 const COLORES = ['#ff5d8f', '#ffb000', '#3ec1ff', '#8b5cf6', '#2ecc71', '#ff7a3d', '#e64fd1']
 const CONFETI = ['#ff5d8f', '#ffd23f', '#3ec1ff', '#8b5cf6', '#2ecc71', '#ff7a3d', '#ffffff']
 const FRASES = ['¡Muy bien!', '¡Genial!', '¡Excelente!', '¡Bravo!', '¡Súper!', '¡Lo hiciste!']
 const CLAVE_HECHOS = 'trazar-numeros:hechos'
+const CLAVE_MODO = 'trazar-numeros:modo'
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!
 const lienzo = $<HTMLCanvasElement>('#lienzo')
 const barra = $('#barra')
 const abajo = $('#abajo')
 const palabra = $('#palabra')
+const dibujo = $<HTMLImageElement>('#dibujo')
 const parlante = $<HTMLButtonElement>('#parlante')
 const bravo = $('#bravo')
+const menu = $('#menu')
+const menuSilabas = $('#silabas')
 
 // --- Escena ---------------------------------------------------------------
 
@@ -50,7 +55,8 @@ let alto = 0
 
 // --- Estado del juego -------------------------------------------------------
 
-let actual = NUMEROS[0]
+let modo: Modo = modoPorId(localStorage.getItem(CLAVE_MODO) ?? '') ?? MODOS[0]
+let actual: Item = modo.items[0]
 let vista: VistaNumero | null = null
 let trazado: Trazado | null = null
 let celebrando = false
@@ -58,7 +64,28 @@ let quieto = 0
 let ultimoTic = 0
 let ultimoDedo: Punto | null = null
 let temporizador = 0
-const hechos = new Set<number>(JSON.parse(localStorage.getItem(CLAVE_HECHOS) ?? '[]'))
+
+// Lo ya escrito, por modo. Los números se guardaban antes en la clave sola.
+function leerHechos(id: IdModo): Set<string> {
+  const guardado = localStorage.getItem(`${CLAVE_HECHOS}:${id}`) ?? (id === 'numeros' ? localStorage.getItem(CLAVE_HECHOS) : null)
+  return new Set((JSON.parse(guardado ?? '[]') as (string | number)[]).map(String))
+}
+const hechosPorModo = new Map(MODOS.map((m) => [m.id, leerHechos(m.id)]))
+const hechos = () => hechosPorModo.get(modo.id)!
+// Lo escrito en esta partida: el final llega al completar la ronda, no por las
+// estrellas guardadas, para poder volver a jugar un juego ya terminado.
+const ronda = new Set<string>()
+
+// Inicio, menús y final ocupan toda la pantalla: mientras se ven, los controles
+// del juego y lo que se está trazando se esconden para no ensuciarlas.
+type Pantalla = 'inicio' | 'menu' | 'silabas' | 'final' | 'juego'
+const pantalla = () => document.body.dataset.pantalla as Pantalla
+
+function mostrar(p: Pantalla): void {
+  document.body.dataset.pantalla = p
+  if (vista) vista.grupo.visible = p === 'juego'
+  if (p === 'juego' && !celebrando) quieto = 0
+}
 
 type Anim = { t: number; dur: number; paso: (k: number) => void }
 const anims: Anim[] = []
@@ -77,19 +104,21 @@ function area() {
   return { cy: alto / 2 - (arriba + piso) / 2, ancho, alto: piso - arriba }
 }
 
-function colores(n: number): string[] {
-  const i = (n - NUMEROS[0]) * 2
-  return [COLORES[i % COLORES.length], COLORES[(i + 1) % COLORES.length]]
+/** Un color por letra o dígito, distinto para cada elemento del modo. */
+function colores(item: Item): string[] {
+  const i = modo.items.indexOf(item) * 2
+  return [...item.texto].map((_, k) => COLORES[(i + k) % COLORES.length])
 }
 
 function construir(conservar: boolean): void {
   const previo = trazado
   vista?.liberar()
-  const digitos = digitosDe(actual)
+  const glifos = glifosDe(actual.texto)
   const a = area()
-  const escala = medirEscala(digitos, a.ancho * 0.86, a.alto * 0.8)
-  vista = new VistaNumero(digitos, escala, colores(actual))
+  const escala = medirEscala(glifos, a.ancho * 0.86, a.alto * 0.8, modo.separacion)
+  vista = new VistaNumero(glifos, escala, colores(actual), modo.separacion)
   vista.grupo.position.set(0, a.cy, 0)
+  vista.grupo.visible = pantalla() === 'juego'
   escena.add(vista.grupo)
   trazado = new Trazado(vista.trazos, {
     tolerancia: Math.max(0.2 * escala, 30),
@@ -105,30 +134,49 @@ function construir(conservar: boolean): void {
 
 function pintarBarra(): void {
   barra.querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
-    const n = Number(b.dataset.n)
-    b.classList.toggle('activo', n === actual)
-    b.classList.toggle('hecho', hechos.has(n))
-    b.setAttribute('aria-pressed', String(n === actual))
+    const id = b.dataset.id!
+    b.classList.toggle('activo', id === actual.id)
+    b.classList.toggle('hecho', hechos().has(id))
+    b.setAttribute('aria-pressed', String(id === actual.id))
   })
+}
+
+/** La palabra de abajo, con la vocal o la sílaba que se está aprendiendo resaltada. */
+function pintarPalabra(): void {
+  const { palabra: texto, marca } = actual
+  palabra.replaceChildren()
+  if (marca && texto.startsWith(marca)) {
+    const b = document.createElement('b')
+    b.textContent = marca
+    palabra.append(b, texto.slice(marca.length))
+  } else {
+    palabra.textContent = texto
+  }
+  palabra.classList.toggle('larga', texto.length > 7)
+  dibujo.hidden = !actual.imagen
+  if (actual.imagen) {
+    dibujo.src = actual.imagen
+    dibujo.alt = texto
+  }
 }
 
 function decirNumero(): void {
   decir(
-    PALABRAS[actual],
+    actual.decir,
     () => parlante.classList.add('hablando'),
     () => parlante.classList.remove('hablando'),
   )
 }
 
-function elegir(n: number, hablar = true): void {
+function elegir(item: Item, hablar = true): void {
   clearTimeout(temporizador)
-  actual = n
+  actual = item
   celebrando = false
   quieto = 0
   bravo.classList.remove('visible')
+  pintarPalabra()
   construir(false)
   pintarBarra()
-  palabra.textContent = PALABRAS[n]
   palabra.classList.remove('salta')
   void palabra.offsetWidth
   palabra.classList.add('salta')
@@ -164,7 +212,7 @@ function lluviaConfeti(cantidad: number): void {
 }
 
 function guardarHechos(): void {
-  localStorage.setItem(CLAVE_HECHOS, JSON.stringify([...hechos]))
+  localStorage.setItem(`${CLAVE_HECHOS}:${modo.id}`, JSON.stringify([...hechos()]))
 }
 
 function celebrar(): void {
@@ -174,6 +222,8 @@ function celebrar(): void {
   navigator.vibrate?.([40, 60, 40])
   const frase = alAzar(FRASES)
   bravo.textContent = frase
+  // Sobre la barra de arriba, para no tapar lo que se acaba de escribir.
+  bravo.style.top = `${Math.max(56, barra.getBoundingClientRect().bottom / 2)}px`
   bravo.classList.add('visible')
   setTimeout(() => decir(frase), 400)
   lluviaConfeti(150)
@@ -182,22 +232,27 @@ function celebrar(): void {
     g.scale.setScalar(1 + 0.25 * Math.sin(Math.min(1, k * 2) * Math.PI) * (1 - k) + (elastico(k) - 1) * 0.1)
     g.rotation.z = Math.sin(k * Math.PI * 4) * 0.06 * (1 - k)
   })
-  hechos.add(actual)
+  hechos().add(actual.id)
+  ronda.add(actual.id)
   guardarHechos()
   pintarBarra()
-  temporizador = window.setTimeout(() => {
-    bravo.classList.remove('visible')
-    const i = NUMEROS.indexOf(actual)
-    if (i === NUMEROS.length - 1) mostrarFinal()
-    else elegir(NUMEROS[i + 1])
-  }, 2700)
+  temporizador = window.setTimeout(avanzar, 2700)
+}
+
+/** Sigue con el próximo que falte en la ronda; el final, sólo cuando están todos. */
+function avanzar(): void {
+  bravo.classList.remove('visible')
+  const siguiente = siguienteEnRonda(modo.items, actual, ronda)
+  if (siguiente) elegir(siguiente)
+  else mostrarFinal()
 }
 
 function mostrarFinal(): void {
-  $('#final').classList.add('visible')
+  $('#final p').textContent = modo.final
+  mostrar('final')
   lluviaConfeti(240)
   sonidoFanfarria()
-  setTimeout(() => decir('¡Lo lograste! Escribiste todos los números'), 500)
+  setTimeout(() => decir(`¡Lo lograste! ${modo.final}`), 500)
 }
 
 function manejar(r: Resultado, q: Punto): void {
@@ -251,6 +306,8 @@ lienzo.addEventListener('pointerdown', (e) => {
     lienzo.setPointerCapture(e.pointerId)
     ultimoDedo = q
     quieto = 0
+    // El punto de la i es un trazo tan corto que basta con tocarlo.
+    if (trazado.trazo!.length <= 12) manejar(trazado.mover(q), q)
   } else {
     vista.sacudir()
     quieto = 2
@@ -288,26 +345,140 @@ lienzo.addEventListener('pointercancel', soltar)
 // --- Interfaz -------------------------------------------------------------------
 
 const burbujas = $('.burbujas')
-for (const n of NUMEROS) {
+;['1', '2', '3', 'A', 'e', 'i', 'O', 'u', 'ma', 'pa'].forEach((t, i) => {
   const s = document.createElement('span')
-  s.textContent = String(n)
-  s.style.setProperty('--c', COLORES[(n - NUMEROS[0]) % COLORES.length])
-  s.style.setProperty('--d', `${(n - NUMEROS[0]) * 0.1}s`)
+  s.textContent = t
+  s.style.setProperty('--c', COLORES[i % COLORES.length])
+  s.style.setProperty('--d', `${i * 0.1}s`)
   burbujas.append(s)
+})
 
+/** Columnas de la barra: todos en una fila si caben; si no, filas de `porFila`. */
+function columnasBarra(): void {
+  const n = modo.items.length
+  const minimo = modo.id === 'palabras' ? 56 : 44
+  const cols = (ancho - 16) / n >= minimo ? n : modo.porFila
+  barra.style.gridTemplateColumns = `repeat(${cols}, minmax(0, ${modo.id === 'palabras' ? 66 : 58}px))`
+}
+
+function armarBarra(): void {
+  barra.replaceChildren()
+  barra.classList.toggle('con-imagen', modo.id === 'palabras')
+  barra.setAttribute('aria-label', `Elige: ${modo.nombre.toLowerCase()}`)
+  modo.items.forEach((item, i) => {
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.dataset.id = item.id
+    b.setAttribute('aria-label', item.palabra)
+    b.style.setProperty('--color', COLORES[i % COLORES.length])
+    if (modo.id === 'palabras' && item.imagen) {
+      const im = document.createElement('img')
+      im.src = item.imagen
+      im.alt = ''
+      b.append(im)
+    } else {
+      b.textContent = item.texto
+    }
+    b.addEventListener('click', () => {
+      desbloquearAudio()
+      sonidoElegir()
+      elegir(item)
+    })
+    barra.append(b)
+  })
+  columnasBarra()
+}
+
+function cambiarModo(m: Modo): void {
+  modo = m
+  localStorage.setItem(CLAVE_MODO, m.id)
+  mostrar('juego')
+  armarBarra()
+  redimensionar()
+  ronda.clear()
+  elegir(m.items.find((it) => !hechos().has(it.id)) ?? m.items[0])
+}
+
+// --- Menús ------------------------------------------------------------------------
+
+/** Una baldosa grande del menú, del color del juego, con su dibujo y sus estrellas. */
+function baldosa(nombre: string, detalle: string, color: string, icono: Modo['icono'], alTocar: () => void): HTMLButtonElement {
   const b = document.createElement('button')
   b.type = 'button'
-  b.dataset.n = String(n)
-  b.textContent = String(n)
-  b.setAttribute('aria-label', PALABRAS[n])
-  b.style.setProperty('--color', COLORES[(n - NUMEROS[0]) % COLORES.length])
+  b.className = 'baldosa'
+  b.style.setProperty('--color', color)
+  const circulo = document.createElement('span')
+  circulo.className = 'icono'
+  if (icono.imagen) {
+    const im = document.createElement('img')
+    im.src = icono.imagen
+    im.alt = ''
+    circulo.append(im)
+  } else {
+    circulo.textContent = icono.texto ?? ''
+  }
+  const textos = document.createElement('span')
+  textos.className = 'textos'
+  const n = document.createElement('span')
+  n.className = 'nombre'
+  n.textContent = nombre
+  const d = document.createElement('span')
+  d.className = 'detalle'
+  d.textContent = detalle
+  textos.append(n, d)
+  const avance = document.createElement('span')
+  avance.className = 'avance'
+  b.append(circulo, textos, avance)
   b.addEventListener('click', () => {
     desbloquearAudio()
     sonidoElegir()
-    elegir(n)
+    alTocar()
   })
-  barra.append(b)
+  return b
 }
+
+function baldosaModo(m: Modo): HTMLButtonElement {
+  const b = baldosa(m.nombre, m.detalle, m.color, m.icono, () => cambiarModo(m))
+  b.dataset.modos = m.id
+  return b
+}
+
+const silabas = SILABAS.map((id) => modoPorId(id)!)
+const grupoSilabas = baldosa('Sílabas', 'ma, pa y palabras', '#ff9600', { texto: 'ma' }, () => abrirMenu('silabas'))
+grupoSilabas.dataset.modos = SILABAS.join(' ')
+menu.querySelector('.baldosas')!.append(...MODOS.filter((m) => !SILABAS.includes(m.id)).map(baldosaModo), grupoSilabas)
+menuSilabas.querySelector('.baldosas')!.append(...silabas.map(baldosaModo))
+
+function abrirMenu(cual: 'menu' | 'silabas' = 'menu'): void {
+  clearTimeout(temporizador)
+  bravo.classList.remove('visible')
+  for (const b of document.querySelectorAll<HTMLElement>('.baldosa')) {
+    const ms = b.dataset.modos!.split(' ').map((id) => modoPorId(id)!)
+    const listos = ms.reduce((n, m) => n + hechosPorModo.get(m.id)!.size, 0)
+    const total = ms.reduce((n, m) => n + m.items.length, 0)
+    b.classList.toggle('actual', ms.includes(modo))
+    b.querySelector('.avance')!.textContent = `⭐ ${listos}/${total}`
+  }
+  mostrar(cual)
+}
+
+$('#modo').addEventListener('click', () => {
+  desbloquearAudio()
+  sonidoElegir()
+  abrirMenu()
+})
+
+// Si se abrió el menú en plena celebración, al volver se sigue con el próximo.
+for (const c of document.querySelectorAll('.cerrar')) {
+  c.addEventListener('click', () => {
+    mostrar('juego')
+    if (celebrando) avanzar()
+  })
+}
+$('#silabas .volver').addEventListener('click', () => {
+  sonidoElegir()
+  abrirMenu()
+})
 
 parlante.addEventListener('click', () => {
   desbloquearAudio()
@@ -322,15 +493,19 @@ $('#otra-vez').addEventListener('click', () => {
 
 $('#jugar').addEventListener('click', () => {
   desbloquearAudio()
-  $('#inicio').classList.add('oculto')
-  elegir(NUMEROS[0])
+  abrirMenu()
 })
 
+// Otra ronda desde el principio; las estrellas ganadas se quedan.
 $('#de-nuevo').addEventListener('click', () => {
-  $('#final').classList.remove('visible')
-  hechos.clear()
-  guardarHechos()
-  elegir(NUMEROS[0])
+  mostrar('juego')
+  ronda.clear()
+  elegir(modo.items[0])
+})
+
+$('#otro-juego').addEventListener('click', () => {
+  sonidoElegir()
+  abrirMenu()
 })
 
 // Evita el zoom con doble toque y el gesto de pellizcar en Safari.
@@ -343,6 +518,7 @@ function redimensionar(): void {
   ancho = innerWidth
   alto = innerHeight
   renderer.setSize(ancho, alto)
+  columnasBarra()
   Object.assign(camara, { left: -ancho / 2, right: ancho / 2, top: alto / 2, bottom: -alto / 2 })
   camara.updateProjectionMatrix()
   fondo.construir(ancho, alto, barra.getBoundingClientRect().bottom)
@@ -350,9 +526,10 @@ function redimensionar(): void {
 }
 
 addEventListener('resize', redimensionar)
+armarBarra()
+pintarPalabra()
 redimensionar()
 construir(false)
-palabra.textContent = PALABRAS[actual]
 pintarBarra()
 
 const reloj = new THREE.Clock()
@@ -378,7 +555,7 @@ renderer.setAnimationLoop(() => {
 // Para las pruebas automáticas: dónde está, en pantalla, el trazo que toca hacer.
 Object.assign(window, {
   __trazar: {
-    estado: () => ({ actual, iTrazo: trazado?.iTrazo, celebrando, hechos: [...hechos] }),
+    estado: () => ({ modo: modo.id, actual: actual.id, iTrazo: trazado?.iTrazo, celebrando, hechos: [...hechos()], ronda: [...ronda] }),
     trazoEnPantalla: () => {
       const g = vista!.grupo
       return trazado?.trazo?.slice(trazado.progreso).map((q) => ({ x: q.x * g.scale.x + g.position.x + ancho / 2, y: alto / 2 - (q.y * g.scale.y + g.position.y) }))

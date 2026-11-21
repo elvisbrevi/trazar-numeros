@@ -9,8 +9,10 @@ abre el menú de juegos:
   dibujo que empieza con ella (abeja, elefante, iglú, oso, uva).
 - **Sílabas**, en tres partes: *ma me mi mo mu*, *pa pe pi po pu* y
   **Palabras** que se forman con ellas, en dos niveles: primero con una sola
-  consonante (mamá, papá, papa, mimo, emú) y luego mezcladas o más largas
+  consonante (mama, papa, mimo, emu, upa) y luego mezcladas o más largas
   (mapa, puma, mopa, apio, momia). Todas tienen su dibujo.
+- Lo que se traza y se lee va **sin tilde**, para no confundir al niño; la voz
+  sí lo pronuncia con su acento («mamá», «papá»).
 
 Cómo se juega:
 
@@ -40,7 +42,7 @@ npm run deploy   # check + wrangler deploy
 ## Estructura
 
 - `src/digitos.ts`: trazos de cada dígito (orden y dirección de escritura).
-- `src/letras.ts`: trazos de las vocales, la m y la p (con tildes), y `glifosDe`.
+- `src/letras.ts`: trazos de las vocales, la m y la p, y `glifosDe`.
 - `src/modos.ts`: los juegos y lo que se traza en cada uno, con sus palabras e imágenes.
 - `src/trazo.ts`: lógica del trazado, sin dibujo (con pruebas en `trazo.test.ts`).
 - `src/numero.ts`: dibujo del número (silueta, guía, relleno, marcador, manito).

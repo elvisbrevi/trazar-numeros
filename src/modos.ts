@@ -37,9 +37,15 @@ export type Modo = {
 
 const img = (nombre: string) => `./img/${nombre}.webp`
 
+/**
+ * Lo que el niño traza y lee va sin tilde (confunde al empezar a escribir);
+ * la voz sí usa la palabra bien escrita para pronunciarla bien. La ñ se queda.
+ */
+export const sinTilde = (texto: string) => texto.normalize('NFD').replace(/\u0301/g, '').normalize('NFC')
+
 const numeros: Item[] = Array.from({ length: 20 }, (_, i) => {
   const n = String(i + 1)
-  return { id: n, texto: n, palabra: PALABRAS[i + 1], decir: PALABRAS[i + 1] }
+  return { id: n, texto: n, palabra: sinTilde(PALABRAS[i + 1]), decir: PALABRAS[i + 1] }
 })
 
 const EJEMPLOS_VOCALES: [string, string, string][] = [
@@ -56,7 +62,7 @@ const vocales: Item[] = [true, false].flatMap((mayuscula) =>
     return {
       id: letra,
       texto: letra,
-      palabra: mayuscula ? letra + palabra.slice(1) : palabra,
+      palabra: sinTilde(mayuscula ? letra + palabra.slice(1) : palabra),
       marca: letra,
       decir: `${v}, de ${palabra}`,
       imagen: img(imagen),
@@ -69,7 +75,7 @@ function silabas(ejemplos: [string, string, string][]): Item[] {
   return ejemplos.map(([s, palabra, imagen]) => ({
     id: s,
     texto: s,
-    palabra,
+    palabra: sinTilde(palabra),
     marca: s,
     decir: `${s}, de ${palabra}`,
     imagen: img(imagen),
@@ -77,13 +83,14 @@ function silabas(ejemplos: [string, string, string][]): Item[] {
 }
 
 // Primero palabras con una sola consonante (mamá, papá…) y después las que
-// mezclan la m y la p o suman vocales sueltas (mapa, puma, apio…).
+// mezclan la m y la p o suman vocales sueltas (mapa, puma, apio…). Sin tilde,
+// «papá» y «papa» se verían iguales: por eso no está la papa.
 const PALABRAS_JUEGO: [string, string, number][] = [
   ['mamá', 'mama', 0],
   ['papá', 'papa-padre', 0],
-  ['papa', 'papa', 0],
   ['mimo', 'mimo', 0],
   ['emú', 'emu', 0],
+  ['upa', 'upa', 0],
   ['mapa', 'mapa', 1],
   ['puma', 'puma', 1],
   ['mopa', 'mopa', 1],
@@ -153,11 +160,11 @@ export const MODOS: Modo[] = [
     nombre: 'Palabras',
     color: '#ff9600',
     icono: { imagen: img('mama') },
-    detalle: 'mamá, mapa, puma…',
+    detalle: 'mama, mapa, puma…',
     items: PALABRAS_JUEGO.map(([palabra, imagen, fila]) => ({
-      id: palabra,
-      texto: palabra,
-      palabra,
+      id: sinTilde(palabra),
+      texto: sinTilde(palabra),
+      palabra: sinTilde(palabra),
       decir: palabra,
       imagen: img(imagen),
       fila,

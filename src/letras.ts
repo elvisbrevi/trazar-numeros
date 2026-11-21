@@ -1,15 +1,12 @@
 // Trazos de las vocales (mayúsculas y minúsculas), la m y la p, en letra de
 // imprenta como se enseña en el colegio. Las mayúsculas ocupan toda la celda,
 // igual que los dígitos. Las minúsculas se apoyan en la línea BASE, su cuerpo
-// llega hasta MEDIA y la p baja hasta 0; puntos y tildes van por encima.
+// llega hasta MEDIA y la p baja hasta 0; el punto de la i va por encima.
 
-import { DIGITOS, arco, linea, p, remuestrear, unir, type Digito, type Punto } from './digitos'
+import { DIGITOS, arco, linea, p, remuestrear, unir, type Digito } from './digitos'
 
 const BASE = 0.4
 const MEDIA = 1.2
-
-/** Tilde inclinada que se escribe de arriba a la derecha hacia abajo a la izquierda. */
-const tilde = (x: number): Punto[] => linea(p(x + 0.1, 1.62), p(x - 0.07, 1.4))
 
 const LETRAS: Record<string, Digito> = {
   A: {
@@ -65,9 +62,6 @@ const LETRAS: Record<string, Digito> = {
     trazos: [linea(p(0.08, MEDIA), p(0.08, 0)), arco(0.38, 0.8, 0.3, 0.4, 150, -150)],
   },
 }
-
-LETRAS.á = { ancho: LETRAS.a.ancho, trazos: [...LETRAS.a.trazos, tilde(0.38)] }
-LETRAS.ú = { ancho: LETRAS.u.ancho, trazos: [...LETRAS.u.trazos, tilde(0.38)] }
 
 /** Glifos (dígitos o letras) de un texto, con sus trazos ya remuestreados. */
 export function glifosDe(texto: string): Digito[] {

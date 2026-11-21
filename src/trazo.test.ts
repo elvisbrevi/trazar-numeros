@@ -64,7 +64,13 @@ describe('Trazado', () => {
         expect(IMAGENES.has(it.imagen!)).toBe(true)
       }
     }
+    // Lo que se traza y se lee va sin tilde, y ninguna palabra se repite.
+    for (const it of MODOS.flatMap((m) => m.items)) {
+      expect(it.texto).not.toMatch(/[áéíóú]/i)
+      expect(it.palabra).not.toMatch(/[áéíóú]/i)
+    }
     const palabras = MODOS.find((m) => m.id === 'palabras')!.items
+    expect(new Set(palabras.map((it) => it.texto)).size).toBe(palabras.length)
     expect(palabras.filter((it) => it.fila === 0).length).toBeGreaterThanOrEqual(5)
     expect(palabras.filter((it) => it.fila === 1).length).toBeGreaterThanOrEqual(5)
   })
@@ -94,7 +100,7 @@ describe('Trazado', () => {
   })
 
   it('los trazos quedan remuestreados a paso fijo', () => {
-    for (const trazo of [...'0123456789AEIOUaeioumpáú'].flatMap(trazosDe)) {
+    for (const trazo of [...'0123456789AEIOUaeioump'].flatMap(trazosDe)) {
       for (let i = 1; i < trazo.length - 1; i++) {
         const d = Math.hypot(trazo[i].x - trazo[i - 1].x, trazo[i].y - trazo[i - 1].y)
         expect(d).toBeLessThan(PASO * 1.01)
